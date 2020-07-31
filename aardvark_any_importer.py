@@ -37,7 +37,7 @@ filetype. Good defaults will be provided, based on those built into blender.
 bl_info = {
 	"name": "Aardvark Any Importer",
 	"category": "Import-Export",
-	"version": (1, 0, 0),
+	"version": (1, 0, 1),
 	"blender": (2, 80, 0),
 	"location": "File > Import > Any file importer",
 	"description": "General purpose, multi file, multi extension importer",
@@ -51,6 +51,12 @@ import os
 
 import bpy
 from bpy_extras.io_utils import ImportHelper
+
+# Cache of bl_idname's and true/false availability to avoid slow UI drawing
+oper_cache = {}
+
+# queue of file (keys) to be imported (value: success bool)
+import_queue = {}
 
 
 def get_user_preferences(context=None):
@@ -89,9 +95,6 @@ def layout_split(layout, factor=0.0, align=False):
 	return layout.split(factor=factor, align=align)
 
 
-# Cache of bl_idname's and true/false availability to avoid slow UI drawing
-oper_cache = {}
-
 def reset_oper_cache():
 	"""Way to reset cache of operator availabilty, to avoid stale pref draw"""
 	global oper_cache
@@ -128,11 +131,11 @@ class IMPORT_OT_import_any_file(bpy.types.Operator, ImportHelper):
 		options={'HIDDEN'})
 
 	setting_mode = bpy.props.EnumProperty(
-		name = "Mode",
+		name = "Show settings",
 		items = (
-			("defaults", "Defaults", "Use defaults for all importers"),
-			("extension", "Per Extension", "Popup settings per extension type"),
-			("file", "Per File", "Popup settings per selected file"),
+			("file", "Per File", "Pop up settings per selected file"),
+			("extension", "Per Extension", "Pop up settings per extension type"),
+			("defaults", "Use defaults", "Use defaults for all importers"),
 			)
 		)
 
@@ -141,7 +144,7 @@ class IMPORT_OT_import_any_file(bpy.types.Operator, ImportHelper):
 	def execute(self, context):
 		prefs = get_user_preferences(context)
 
-		# If the first run, user may not have setup preferences
+		# If no extensions set, just reset to apply defaults
 		if not prefs.file_extensions:
 			bpy.ops.import_any.reset_extensions()
 		curr_exts = [ext.extension for ext in prefs.file_extensions]
@@ -227,9 +230,16 @@ class IMPORT_OT_import_any_file(bpy.types.Operator, ImportHelper):
 		# do some kwargs magic to input the rig
 
 
+def get_prefs_extensions(context):
+	"""Return a comma separated list of the include extensions"""
+	prefs = get_user_preferences(context)
+	return ";".join(["*"+pset.extension for pset in prefs.file_extensions])
+
+
 def import_draw_append(self, context):
-	self.layout.operator(
+	opr = self.layout.operator(
 		"import_any.file", text="Any file importer", icon="IMPORT")
+	opr.filter_glob = get_prefs_extensions(context)
 
 
 class IMPORT_OT_import_any_reset_extensions(bpy.types.Operator):
@@ -261,6 +271,13 @@ class IMPORT_OT_import_any_reset_extensions(bpy.types.Operator):
 			"chan": "import_scene.import_chan",
 			"wrl": "import_scene.x3d",
 			"x3d": "import_scene.x3d",
+			"xyz": "import_mesh.xyz", # also implements .pdb?
+			"txt": "text.open",
+			"rtf": "text.open",
+			"py": "text.open",
+
+			# Implement special case, where defaults to e.g. scene or collections
+			# "blend": "wm.append"
 
 			# NOT working
 			# "jpg": "import_image.to_plane",
@@ -311,7 +328,7 @@ class IMPORT_OT_import_any_add_extension(bpy.types.Operator):
 
 
 class IMPORT_OT_import_any_remove_extension(bpy.types.Operator):
-	"""Add an extension"""
+	"""Remove an extension from preferences"""
 	bl_idname = "import_any.remove_extension"
 	bl_label = "Add extension"
 	bl_options = {'REGISTER', 'UNDO'}
@@ -343,8 +360,6 @@ def operator_code_update(self, context):
 
 	Goal is to go from bpy.ops.import_scene.obj() to import_scene.obj
 	"""
-
-
 	truncate_suffix = self.operator.endswith("()")
 	new_base = None
 	if len(self.operator.split("."))==4:
