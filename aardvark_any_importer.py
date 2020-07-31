@@ -37,7 +37,7 @@ filetype. Good defaults will be provided, based on those built into blender.
 bl_info = {
 	"name": "Aardvark Any Importer",
 	"category": "Import-Export",
-	"version": (1, 0, 1),
+	"version": (1, 0, 2),
 	"blender": (2, 80, 0),
 	"location": "File > Import > Any file importer",
 	"description": "General purpose, multi file, multi extension importer",
@@ -148,13 +148,7 @@ class IMPORT_OT_import_any_file(bpy.types.Operator, ImportHelper):
 		if not prefs.file_extensions:
 			bpy.ops.import_any.reset_extensions()
 		curr_exts = [ext.extension for ext in prefs.file_extensions]
-
-		print("Select files:")
 		self.directory = os.path.dirname(self.filepath)
-		print("Folder:", self.directory)
-		print(self.files)
-		print(self.files[0])
-		print(dir(self.files[0]))
 
 		extensions = [os.path.splitext(imp.name)[-1][1:] for imp in self.files]
 		extensions = set(extensions)
@@ -164,70 +158,75 @@ class IMPORT_OT_import_any_file(bpy.types.Operator, ImportHelper):
 			if ext not in curr_exts:
 				ext_missing.append(ext)
 				continue
-			self.import_single(context, ext)
+			import_single(
+				context, ext, self.directory, self.files,self.setting_mode)
 
 		if ext_missing:
 			self.report({"WARNING"},
 				"Extensions not associated: "+", ".join(ext_missing))
-		print("Finished")
 		return {'FINISHED'}
 
-	def import_single(self, context, ext):
-		"""Import all files of a single extension type"""
-		files = [imp.name for imp in self.files if imp.name.endswith(ext)]
-		print("About to import files:")
-		print(files)
 
-		prefs = get_user_preferences(context)
-		oper = None
-		for pref_set in prefs.file_extensions:
-			if pref_set.extension != ext:
-				continue
-			oper = pref_set.operator
-			break
+def import_single(context, ext, directory, files, setting_mode):
+	"""Import all files of a single extension type"""
+	files = [imp.name for imp in files if imp.name.endswith(ext)]
 
-		print("Operator found: "+str(oper))
+	prefs = get_user_preferences(context)
+	oper = None
+	for pref_set in prefs.file_extensions:
+		if pref_set.extension != ext:
+			continue
+		oper = pref_set.operator
+		break
 
-		# need to get the inputs required
-		props = context.window_manager.operator_properties_last(oper)
-		print("Properties: ", dir(props))
-		kwargs = {}
+	if setting_mode == "defaults":
+		args = ['EXEC_DEFAULT']
+	else:
 		args = ['INVOKE_DEFAULT']
+	kwargs = get_kwargs(context, oper, directory, files)
 
-		# capture as many scenarios as possible, won't be perfect
-		bfilepath = hasattr(props, "filepath")
-		bdirectory = hasattr(props, "directory")
-		bfiles = hasattr(props, "files")
+	# print("Operator found: "+str(oper))
+	# print("Apply these args:", args)
+	# print("Apply these kwargs:", kwargs)
 
-		if bfilepath and bdirectory and bfiles:
-			# Example: bpy.ops.import_mesh.stl
-			kwargs["filepath"] = os.path.join(self.directory, files[0])
-			kwargs["directory"] = self.directory
-			# Yes, this structure is right based on examples like above
-			kwargs["files"] = [{"name": name, "name": name} for name in files]
-		elif bfilepath and bdirectory and not bfiles:
-			# Example: import_scene.fbx
-			kwargs["filepath"] = files[0]
-			kwargs["directory"] = self.directory
-		elif bfilepath and not bdirectory:
-			# Example: import_scene.obj
-			kwargs["filepath"] = os.path.join(self.directory, files[0])
-		elif bfiles and bdirectory:
-			# example: import_image.to_plane
-			kwargs["files"] = [{"name": name, "name": name} for name in files]
-			kwargs["directory"] = self.directory
+	# Apply to the operator itself, and call
+	base, oprs = oper.split(".")
+	oper_func = getattr(getattr(bpy.ops, base), oprs)
 
-		# other scenarios, like file, directory,
-		print("Apply these args:", args)
-		print("Apply these kwargs:", kwargs)
+	# may invoke popup, modal likely lasts past this operator's execution
+	oper_func(*args, **kwargs) # pass both invoke and parameter values
 
-		# Apply to the operator itself, and call
-		base, oprs = oper.split(".")
-		oper_func = getattr(getattr(bpy.ops, base), oprs)
-		print("Function:", oper_func)
-		oper_func(*args, **kwargs) # pass both invoke and parameter values
-		print("Does the above line block?")
-		# do some kwargs magic to input the rig
+
+def get_kwargs(context, oper, directory, files):
+	"""Conditionals to detect the best keyword args to use for an operator"""
+
+	# get the common kwargs for import operators
+	props = context.window_manager.operator_properties_last(oper)
+	bfilepath = hasattr(props, "filepath")
+	bdirectory = hasattr(props, "directory")
+	bfiles = hasattr(props, "files")
+
+	# capture as many scenarios as possible, won't be perfect
+	# and only when necessary (based on the operator), do special cases
+	kwargs = {}
+	if bfilepath and bdirectory and bfiles:
+		# Example: bpy.ops.import_mesh.stl
+		kwargs["filepath"] = os.path.join(directory, files[0])
+		kwargs["directory"] = directory
+		# Yes, this structure is right based on examples like above
+		kwargs["files"] = [{"name": name, "name": name} for name in files]
+	elif bfilepath and bdirectory and not bfiles:
+		# Example: import_scene.fbx
+		kwargs["filepath"] = files[0]
+		kwargs["directory"] = directory
+	elif bfilepath and not bdirectory:
+		# Example: import_scene.obj
+		kwargs["filepath"] = os.path.join(directory, files[0])
+	elif bfiles and bdirectory:
+		# example: import_image.to_plane
+		kwargs["files"] = [{"name": name, "name": name} for name in files]
+		kwargs["directory"] = directory
+	return kwargs
 
 
 def get_prefs_extensions(context):
