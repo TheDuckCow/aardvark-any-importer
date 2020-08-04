@@ -38,17 +38,15 @@ The whole point is you get straight to selecting the files before worrying about
 
 ### 3) Decide how to import the selected files
 
-> **_NOTE:_** Due to only one file importing at a time, the below is not applicable (but is the long-term plan)
-
 In the filebrowser popup, see the settings at right. There are three modes:
 
-a) Default: Use the default import settings for all files
-b) Per extension: Prompt UI settings popups once per each extension type of the selected files
-c) Per file: Prompt UI setting popups for each of the selected files
+a) Per file: Prompt UI setting popups for each of the selected files
+b) Per extension: Prompt UI settings popups once per each extension type of the selected files (**_NOTE:_** Due to only one file importing at a time, this setting does not yet do anything and behaves like Per File above)
+c) Use defaults: Use the default import settings for all files, do not popup settings
 
 ### 4) Press import!
 
-Depending on what you selected in step 3, you either get to sit back and relax, or you get to input the native settings for each importer for the extensions selected.
+Depending on what you selected in step 3, you either get to sit back and relax, or you get to input the native settings for each importer for the files selected.
 
 Note that if you want to "undo", you will have to press control+z once per each file imported (this is a consequence of the way this was implemented to allow for settings adjustments). Take into consideration before importing a thousand files, maybe save first!
 
