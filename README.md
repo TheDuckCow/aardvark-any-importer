@@ -4,7 +4,7 @@ This is a blender add-on designed to make general file importing easy and fast. 
 
 ## How to install?
 
-1) Download the `aardvark_any_importer.py` file here [link pending]
+1) Download the `aardvark_any_importer.py` file [from here](https://raw.githubusercontent.com/TheDuckCow/aardvark-any-importer/master/aardvark_any_importer.py), save it as a file on your machine somewhere.
 2) In blender 2.8, go to edit > preferences, click on the add-on tab on the left
 3) Press the "Install..." button
 4) Select the downloaded `aardvark_any_importer.py` in the filebrowser, press install
