@@ -37,7 +37,7 @@ filetype. Good defaults will be provided, based on those built into blender.
 bl_info = {
 	"name": "Aardvark Any Importer",
 	"category": "Import-Export",
-	"version": (1, 0, 2),
+	"version": (1, 1, 0),
 	"blender": (2, 80, 0),
 	"location": "File > Import > Any file importer",
 	"description": "General purpose, multi file, multi extension importer",
@@ -74,10 +74,16 @@ def get_user_preferences(context=None):
 
 
 def make_annotations(cls):
-	"""Add annotation attribute to class fields to avoid 2.8 warnings"""
+	"""Add annotation attribute to fields to avoid Blender 2.8+ warnings"""
 	if not hasattr(bpy.app, "version") or bpy.app.version < (2, 80):
 		return cls
-	bl_props = {k: v for k, v in cls.__dict__.items() if isinstance(v, tuple)}
+	if bpy.app.version < (2, 93, 0):
+		bl_props = {
+			k: v for k, v in cls.__dict__.items() if isinstance(v, tuple)}
+	else:
+		bl_props = {
+			k: v for k, v in cls.__dict__.items()
+			if isinstance(v, bpy.props._PropertyDeferred)}
 	if bl_props:
 		if '__annotations__' not in cls.__dict__:
 			setattr(cls, '__annotations__', {})

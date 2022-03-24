@@ -2,6 +2,8 @@
 
 This is a blender add-on designed to make general file importing easy and fast. By default, when you want to import a file, you must first select the correct exporter. Plus, you can only import one file at a time (typically). This add-on attempts to make it easier to select multiple files and even import different types of files (extensions) at once, so you don't have to think much ahead.
 
+This addon as been updated so that it works with Blender 3.1, and as far back as Blender 2.8.
+
 ## How to install?
 
 1) Download the `aardvark_any_importer.py` file [from here](https://raw.githubusercontent.com/TheDuckCow/aardvark-any-importer/master/aardvark_any_importer.py), save it as a file on your machine somewhere.
