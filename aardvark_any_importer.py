@@ -37,13 +37,13 @@ filetype. Good defaults will be provided, based on those built into blender.
 bl_info = {
 	"name": "Aardvark Any File Importer",
 	"category": "Import-Export",
-	"version": (1, 1, 0),
+	"version": (1, 1, 1),
 	"blender": (2, 80, 0),
 	"location": "File > Import > Any file importer",
 	"description": "General purpose, multi file, multi extension importer",
 	"wiki_url": "",
 	"author": "Patrick W. Crawford <support@theduckcow.com>",
-	"tracker_url":"https://github.com/TheDuckCow/aardvark-any-importer"
+	"tracker_url": "https://github.com/TheDuckCow/aardvark-any-importer"
 }
 
 import importlib
@@ -64,9 +64,9 @@ def get_user_preferences(context=None):
 	if not context:
 		context = bpy.context
 	prefs = None
-	if hasattr(context, "user_preferences"): # 2.7
+	if hasattr(context, "user_preferences"):  # 2.7
 		prefs = context.user_preferences.addons.get(__name__, None)
-	elif hasattr(context, "preferences"): # 2.8
+	elif hasattr(context, "preferences"):  # 2.8
 		prefs = context.preferences.addons.get(__name__, None)
 	if prefs:
 		return prefs.preferences
@@ -137,13 +137,13 @@ class IMPORT_OT_import_any_file(bpy.types.Operator, ImportHelper):
 		options={'HIDDEN'})
 
 	setting_mode = bpy.props.EnumProperty(
-		name = "Show settings",
-		items = (
+		name="Show settings",
+		items=(
 			("file", "Per File", "Pop up settings per selected file"),
 			("extension", "Per Extension", "Pop up settings per extension type"),
 			("defaults", "Use defaults", "Use defaults for all importers"),
-			)
 		)
+	)
 
 	directory = ''
 
@@ -165,11 +165,12 @@ class IMPORT_OT_import_any_file(bpy.types.Operator, ImportHelper):
 				ext_missing.append(ext)
 				continue
 			import_single(
-				context, ext, self.directory, self.files,self.setting_mode)
+				context, ext, self.directory, self.files, self.setting_mode)
 
 		if ext_missing:
-			self.report({"WARNING"},
-				"Extensions not associated: "+", ".join(ext_missing))
+			self.report(
+				{"WARNING"},
+				"Extensions not associated: " + ", ".join(ext_missing))
 		return {'FINISHED'}
 
 
@@ -199,8 +200,9 @@ def import_single(context, ext, directory, files, setting_mode):
 	base, oprs = oper.split(".")
 	oper_func = getattr(getattr(bpy.ops, base), oprs)
 
-	# may invoke popup, modal likely lasts past this operator's execution
-	oper_func(*args, **kwargs) # pass both invoke and parameter values
+	# May invoke popup, modal likely lasts past this operator's execution.
+	# Pass both invoke and parameter values.
+	oper_func(*args, **kwargs)
 
 
 def get_kwargs(context, oper, directory, files):
@@ -238,7 +240,7 @@ def get_kwargs(context, oper, directory, files):
 def get_prefs_extensions(context):
 	"""Return a comma separated list of the include extensions"""
 	prefs = get_user_preferences(context)
-	return ";".join(["*"+pset.extension for pset in prefs.file_extensions])
+	return ";".join(["*" + pset.extension for pset in prefs.file_extensions])
 
 
 def import_draw_append(self, context):
@@ -276,13 +278,13 @@ class IMPORT_OT_import_any_reset_extensions(bpy.types.Operator):
 			"chan": "import_scene.import_chan",
 			"wrl": "import_scene.x3d",
 			"x3d": "import_scene.x3d",
-			"xyz": "import_mesh.xyz", # also implements .pdb?
+			"xyz": "import_mesh.xyz",  # also implements .pdb?
 			"txt": "text.open",
 			"rtf": "text.open",
 			"py": "text.open",
 
 			# Implement special case, where defaults to e.g. scene or collections
-			# "blend": "wm.append"
+			"blend": "wm.append"
 
 			# NOT working
 			# "jpg": "import_image.to_plane",
@@ -355,7 +357,8 @@ class IMPORT_OT_import_any_remove_extension(bpy.types.Operator):
 			prefs.file_extensions.remove(pop)
 			return {'FINISHED'}
 		else:
-			self.report({"ERROR"},
+			self.report(
+				{"ERROR"},
 				"Extension {} missing, cannot remove".format(self.extension))
 			return {'CANCELLED'}
 
@@ -367,7 +370,7 @@ def operator_code_update(self, context):
 	"""
 	truncate_suffix = self.operator.endswith("()")
 	new_base = None
-	if len(self.operator.split("."))==4:
+	if len(self.operator.split(".")) == 4:
 		new_base = ".".join(self.operator.split(".")[2:])
 
 	if new_base and truncate_suffix:
@@ -397,8 +400,9 @@ class AardvarkImporterPreferences(bpy.types.AddonPreferences):
 		col = row.column()
 		col.scale_y = 0.8
 		col.label(text="Assign importers to use with extensions.")
-		col.label(text="For each extension, input the operator name (similar "
-			"to how shortcut keys are defined).")
+		col.label(text=(
+			"For each extension, enter the operator name (similar "
+			"to how shortcut keys are defined)."))
 
 		col = layout.column(align=True)
 		row = col.row()
@@ -428,7 +432,7 @@ class AardvarkImporterPreferences(bpy.types.AddonPreferences):
 			elif "." not in ext.operator:
 				spl_row.label(text="Operator should contain '.'", icon="ERROR")
 				skip = True
-			elif len(ext.operator.split("."))>2:
+			elif len(ext.operator.split(".")) > 2:
 				spl_row.label(
 					text="Operator should only have one '.'", icon="ERROR")
 				skip = True
@@ -437,7 +441,8 @@ class AardvarkImporterPreferences(bpy.types.AddonPreferences):
 				if operator_exists(ext.operator, refresh=False):
 					spl_row.label(text="", icon="BLANK1")
 				else:
-					spl_row.label(text="Operator not found (enable addon?)",
+					spl_row.label(
+						text="Operator not found (enable addon?)",
 						icon="ERROR")
 
 
