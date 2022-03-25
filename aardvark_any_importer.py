@@ -35,7 +35,7 @@ filetype. Good defaults will be provided, based on those built into blender.
 
 
 bl_info = {
-	"name": "Aardvark Any Importer",
+	"name": "Aardvark Any File Importer",
 	"category": "Import-Export",
 	"version": (1, 1, 0),
 	"blender": (2, 80, 0),
@@ -250,7 +250,7 @@ def import_draw_append(self, context):
 class IMPORT_OT_import_any_reset_extensions(bpy.types.Operator):
 	"""Add an extension to provide an operator association"""
 	bl_idname = "import_any.reset_extensions"
-	bl_label = "Reset to defaults"
+	bl_label = "Reset"
 	bl_options = {'REGISTER', 'UNDO'}
 
 	def execute(self, context):
@@ -311,7 +311,7 @@ class IMPORT_OT_import_any_add_extension(bpy.types.Operator):
 	bl_label = "Add extension"
 	bl_options = {'REGISTER', 'UNDO'}
 
-	extension = bpy.props.StringProperty(name="Extension", default="")
+	extension = bpy.props.StringProperty(name="Extension (e.g. obj)", default="")
 
 	def invoke(self, context, event):
 		return context.window_manager.invoke_props_dialog(self)
@@ -409,7 +409,7 @@ class AardvarkImporterPreferences(bpy.types.AddonPreferences):
 		row.label(text="")
 		if not self.file_extensions:
 			row = col.row()
-			row.label(text="No extension associations, add one below")
+			row.label(text="No extension associations, use 'Add extension'")
 		for ext in self.file_extensions:
 			row = col.row()
 			# row.label(text=ext.extension+":")
@@ -450,6 +450,8 @@ classes = (
 	IMPORT_OT_import_any_remove_extension,
 )
 
+addon_keymaps = []
+
 
 def register():
 	for cls in classes:
@@ -457,10 +459,26 @@ def register():
 		bpy.utils.register_class(cls)
 	bpy.types.TOPBAR_MT_file_import.prepend(import_draw_append)
 
+	# Add the hotkey
+	wm = bpy.context.window_manager
+	kc = wm.keyconfigs.addon
+	if kc:
+		km = wm.keyconfigs.addon.keymaps.new(
+			name='Window', space_type='EMPTY', region_type='WINDOW')
+		kmi = km.keymap_items.new(
+			IMPORT_OT_import_any_file.bl_idname,
+			type='A', value='PRESS', ctrl=True, shift=True)
+		addon_keymaps.append((km, kmi))
+
 	reset_oper_cache()
 
 
 def unregister():
+	# Remove the hotkey
+	for km, kmi in addon_keymaps:
+		km.keymap_items.remove(kmi)
+	addon_keymaps.clear()
+
 	bpy.types.TOPBAR_MT_file_import.remove(import_draw_append)
 	for cls in reversed(classes):
 		bpy.utils.unregister_class(cls)

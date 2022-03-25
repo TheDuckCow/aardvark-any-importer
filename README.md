@@ -28,9 +28,11 @@ Want to add another extension, and link to a specific operator? Follow the steps
 
 ### 1) Activate it from one of these places:
 
-a) File > Import > Any file importer
-b) Press F4 > Import > Any file importer
-c) Assign a (custom) shortcut key! The main operator is `import_any.file`.
+a) Use the shortcut key: `a` + `control` + `shift`
+b) Assign your own shortcut key for the operator `import_any.file`.
+c) File > Import > Any file importer
+d) Press F4 > Import > Any file importer
+
 
 ### 2) Select your files
 
@@ -44,7 +46,7 @@ In the filebrowser popup, see the settings at right. There are three modes:
 
 a) Per file: Prompt UI setting popups for each of the selected files
 b) Per extension: Prompt UI settings popups once per each extension type of the selected files (**_NOTE:_** Due to only one file importing at a time, this setting does not yet do anything and behaves like Per File above)
-c) Use defaults: Use the default import settings for all files, do not popup settings
+c) Use defaults: Use the default import settings for all files, do not popup any settings.
 
 ### 4) Press import!
 
