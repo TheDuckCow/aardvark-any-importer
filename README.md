@@ -1,3 +1,7 @@
+# NOTE:
+
+This addon was useful, but is not longer very relevant with Blender 4.1's general drag and drop support - a superior solution we wanted all along!
+
 # Aardvark (Any File) Importer
 
 This is a blender add-on designed to make general file importing easy and fast. By default, when you want to import a file, you must first select the correct exporter. Plus, you can only import one file at a time (typically). This add-on attempts to make it easier to select multiple files and even import different types of files (extensions) at once, so you don't have to think much ahead.
